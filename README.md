@@ -2,6 +2,24 @@
 
 A backend-focused full-stack portfolio application using **FastAPI, PostgreSQL, SQLAlchemy, Alembic, React, TypeScript, Docker, and GitHub Actions**. Uses synthetic demo data.
 
+## Application Screenshots
+
+### Dashboard
+Overview of products, available inventory, and recent orders.
+
+![OrderFlow Dashboard](screenshots/dashboard.png)
+
+### Inventory Management
+Manage products, monitor stock levels, and create orders.
+
+![OrderFlow Inventory](screenshots/inventory.png)
+
+### Order Management
+Track order status, review totals, and cancel orders.
+
+![OrderFlow Orders](screenshots/orders.png)
+
+
 ## Features
 - Product create/list/detail/update/delete (products referenced by orders cannot be deleted)
 - Atomic inventory adjustments with insufficient-stock conflict handling
