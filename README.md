@@ -10,7 +10,7 @@ A backend-focused full-stack portfolio application using **FastAPI, PostgreSQL, 
 - Concurrent stock updates guarded by PostgreSQL conditional UPDATE
 - Order cancellation restores inventory once, using a locked order row
 - Responsive React dashboard for product creation, cart-like ordering, and cancellation
-- OpenAPI docs, schema migration, CI smoke/validation tests
+- OpenAPI documentation, Alembic database migrations, and 10 automated tests integrated with GitHub Actions CI
 
 ## Quick start (Windows 11 + Docker Desktop)
 
@@ -49,10 +49,52 @@ Example order request:
 ```
 
 ## Testing
+
+OrderFlow includes 10 automated tests covering:
+
+- API health and request validation
+- Product creation, retrieval, updates, and deletion
+- Inventory updates and insufficient-stock protection
+- Order creation, retrieval, and cancellation
+- Inventory restoration after cancellation
+- Concurrent order placement to prevent overselling
+- Concurrent cancellation to prevent duplicate restocking
+
+### Run Tests Locally
+
+Create and migrate the test database before the first run.
+
+Run the complete test suite:
+
 ```powershell
-docker compose exec backend pytest -q
+docker compose exec -e PYTHONPATH=/code -e DATABASE_URL=postgresql+psycopg://orderflow:orderflow_dev@db:5432/orderflow_test backend pytest -v
 ```
-The included tests are initial API smoke/validation tests. **Before claiming production readiness**, expand coverage with PostgreSQL-backed transaction rollback, cancellation, and concurrent order integration tests. This is a portfolio MVP, not a payment/order-fulfillment system.
+
+Expected result: 10 tests passed.
+
+### Continuous Integration
+
+GitHub Actions automatically runs on pushes and pull requests.
+
+The CI pipeline:
+
+1. Starts PostgreSQL 17.
+2. Installs Python dependencies.
+3. Applies Alembic database migrations.
+4. Runs all backend tests.
+5. Installs frontend dependencies.
+6. Builds the React/TypeScript frontend.
+
+### Concurrency Safety
+
+OrderFlow uses PostgreSQL transactions and atomic inventory updates to prevent overselling.
+
+Order cancellation uses row-level locking to prevent concurrent cancellation requests from restoring inventory more than once.
+
+These behaviors are verified by dedicated concurrency integration tests.
+
+**Note:** OrderFlow is a portfolio MVP, not a production-ready payment or fulfillment system.
+
 
 ## Architecture
 - `backend/app/main.py` HTTP endpoints and transactional operations
