@@ -19,6 +19,7 @@ services:
     environment:
       DATABASE_URL: postgresql+psycopg://orderflow:orderflow_dev@db:5432/orderflow
       CORS_ORIGINS: http://localhost:5173
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:?Set JWT_SECRET_KEY in root .env}
     ports:
       - "8000:8000"
     depends_on:

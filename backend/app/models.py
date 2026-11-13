@@ -29,3 +29,12 @@ class OrderItem(Base):
     unit_price: Mapped[Decimal] = mapped_column(Numeric(10, 2), nullable=False)
     order: Mapped[Order] = relationship(back_populates="items")
     __table_args__ = (CheckConstraint("quantity > 0", name="ck_item_quantity"), CheckConstraint("unit_price >= 0", name="ck_item_price"))
+
+class User(Base):
+    __tablename__ = "users"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    email: Mapped[str] = mapped_column(String(255), unique=True, index=True, nullable=False)
+    hashed_password: Mapped[str] = mapped_column(String(255), nullable=False)
+    role: Mapped[str] = mapped_column(String(20), nullable=False, default="staff")
+    is_active: Mapped[bool] = mapped_column(default=True, nullable=False)
+    __table_args__ = (CheckConstraint("role IN ('admin', 'staff')", name="ck_user_role"),)

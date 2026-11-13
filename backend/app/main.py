@@ -4,6 +4,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import select, update
 from sqlalchemy.orm import Session
 from .config import settings
+from .auth import get_current_user, require_admin
+from .auth_routes import router as auth_router
+from .models import User
 from .db import get_db
 from .models import Order, OrderItem, Product
 from .schemas import InventoryChange, OrderCreate, OrderOut, ProductCreate, ProductOut, ProductPatch
@@ -11,17 +14,20 @@ from .schemas import InventoryChange, OrderCreate, OrderOut, ProductCreate, Prod
 app = FastAPI(title="OrderFlow API", version="1.0.0")
 app.add_middleware(CORSMiddleware, allow_origins=settings.cors_origins.split(","), allow_credentials=False, allow_methods=["*"], allow_headers=["*"])
 DB = Annotated[Session, Depends(get_db)]
+CurrentUser = Annotated[User, Depends(get_current_user)]
+AdminUser = Annotated[User, Depends(require_admin)]
+app.include_router(auth_router)
 
 @app.get("/health")
 def health():
     return {"status": "ok"}
 
 @app.get("/products", response_model=list[ProductOut])
-def list_products(db: DB):
+def list_products(db: DB, user: CurrentUser):
     return db.scalars(select(Product).order_by(Product.id)).all()
 
 @app.post("/products", response_model=ProductOut, status_code=201)
-def create_product(payload: ProductCreate, db: DB):
+def create_product(payload: ProductCreate, db: DB, admin: AdminUser):
     product = Product(**payload.model_dump())
     db.add(product)
     db.commit()
@@ -29,14 +35,14 @@ def create_product(payload: ProductCreate, db: DB):
     return product
 
 @app.get("/products/{product_id}", response_model=ProductOut)
-def get_product(product_id: int, db: DB):
+def get_product(product_id: int, db: DB, user: CurrentUser):
     product = db.get(Product, product_id)
     if product is None:
         raise HTTPException(404, "Product not found")
     return product
 
 @app.patch("/products/{product_id}", response_model=ProductOut)
-def patch_product(product_id: int, payload: ProductPatch, db: DB):
+def patch_product(product_id: int, payload: ProductPatch, db: DB, admin: AdminUser):
     product = db.get(Product, product_id)
     if product is None:
         raise HTTPException(404, "Product not found")
@@ -49,7 +55,7 @@ def patch_product(product_id: int, payload: ProductPatch, db: DB):
     return product
 
 @app.delete("/products/{product_id}", status_code=204)
-def delete_product(product_id: int, db: DB):
+def delete_product(product_id: int, db: DB, admin: AdminUser):
     product = db.get(Product, product_id)
     if product is None:
         raise HTTPException(404, "Product not found")
@@ -59,7 +65,7 @@ def delete_product(product_id: int, db: DB):
     db.commit()
 
 @app.patch("/products/{product_id}/inventory", response_model=ProductOut)
-def adjust_inventory(product_id: int, payload: InventoryChange, db: DB):
+def adjust_inventory(product_id: int, payload: InventoryChange, db: DB, admin: AdminUser):
     try:
         product = db.scalars(update(Product).where(Product.id == product_id, Product.stock_quantity + payload.quantity_change >= 0).values(stock_quantity=Product.stock_quantity + payload.quantity_change).returning(Product)).one_or_none()
         if product is None:
@@ -74,18 +80,18 @@ def adjust_inventory(product_id: int, payload: InventoryChange, db: DB):
         raise
 
 @app.get("/orders", response_model=list[OrderOut])
-def list_orders(db: DB):
+def list_orders(db: DB, user: CurrentUser):
     return db.scalars(select(Order).order_by(Order.id.desc())).all()
 
 @app.get("/orders/{order_id}", response_model=OrderOut)
-def get_order(order_id: int, db: DB):
+def get_order(order_id: int, db: DB, user: CurrentUser):
     order = db.get(Order, order_id)
     if order is None:
         raise HTTPException(404, "Order not found")
     return order
 
 @app.post("/orders", response_model=OrderOut, status_code=201)
-def create_order(payload: OrderCreate, db: DB):
+def create_order(payload: OrderCreate, db: DB, user: CurrentUser):
     # Consolidate duplicate product IDs; deterministic order reduces deadlock risk.
     quantities = {}
     for item in payload.items:
@@ -108,7 +114,7 @@ def create_order(payload: OrderCreate, db: DB):
         raise
 
 @app.post("/orders/{order_id}/cancel", response_model=OrderOut)
-def cancel_order(order_id: int, db: DB):
+def cancel_order(order_id: int, db: DB, admin: AdminUser):
     try:
         # Lock order first so simultaneous cancellations cannot restore twice.
         order = db.scalar(select(Order).where(Order.id == order_id).with_for_update())

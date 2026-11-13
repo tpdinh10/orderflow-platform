@@ -365,3 +365,23 @@ footer {
     font-size: 26px;
   }
 }
+
+/* Authentication */
+.login-page { min-height:100vh; display:grid; place-items:center; padding:24px; background:#eef2fa; }
+.login-card { width:min(100%,420px); display:flex; flex-direction:column; gap:12px; padding:36px; background:white; border-radius:16px; box-shadow:0 14px 45px #18233a1c; }
+.login-brand { display:flex; align-items:center; gap:10px; color:#264dc8; font-size:23px; font-weight:800; }
+.login-card h1 { margin:12px 0 0; }
+.login-card p { margin:0 0 12px; color:#64748b; }
+.login-card label { font-weight:600; }
+.login-card input { padding:12px; border:1px solid #cbd5e1; border-radius:8px; }
+.login-card small { color:#64748b; }
+.sidebar .logout { background:#31476d; margin:12px 0; padding:8px 12px; }
+
+/* Inventory management */
+.manage-buttons { display:flex; flex-wrap:wrap; gap:6px; min-width:230px; }
+.manage-buttons button { padding:8px 10px; font-size:12px; white-space:nowrap; }
+.inventory-editor { margin:18px 24px; padding:18px; border:1px solid #dce4f2; border-radius:12px; background:#f8faff; }
+.inventory-editor h3 { margin:0 0 8px; }
+.inventory-editor p { margin:0 0 12px; color:#64748b; }
+.editor-controls { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+.editor-controls input { min-width:140px; flex:1; padding:10px; border:1px solid #cbd5e1; border-radius:8px; }

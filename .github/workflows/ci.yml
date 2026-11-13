@@ -28,6 +28,7 @@ jobs:
     env:
       DATABASE_URL: postgresql+psycopg://orderflow:orderflow_dev@localhost:5432/orderflow_test
       PYTHONPATH: ${{ github.workspace }}/backend
+      JWT_SECRET_KEY: ci-only-fixed-test-secret-not-for-production-2026
 
     steps:
       - name: Checkout repository
