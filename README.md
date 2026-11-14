@@ -6,7 +6,20 @@ The main challenge I wanted to work through was keeping stock counts accurate wh
 
 **[Live app](https://orderflow-platform-beryl.vercel.app/)** · **[API docs](https://orderflow-api-3dz8.onrender.com/docs)**
 
-The app requires an account to sign in. Public demo credentials are not available yet. Since the API runs on Render's free tier, the first request after a period of inactivity may take a little longer.
+### Live Demo
+
+**[Open OrderFlow](https://orderflow-platform-beryl.vercel.app/)**
+
+**Demo account**
+- Email: `demo@orderflow.local`
+- Password: `Ineedalongpassword`
+- Access: Read-only
+
+The demo account lets visitors explore the dashboard, inventory, order history, and order details without modifying data.
+
+Admin and regular staff accounts support additional operations, including product management, inventory updates, order creation, and cancellation, according to their permissions.
+
+The API runs on Render's free tier, so the first request after inactivity may take a little longer.
 
 ## What it does
 
@@ -15,8 +28,6 @@ The app requires an account to sign in. Public demo credentials are not availabl
 - **Cancellations:** Admins can cancel orders, and the app returns the reserved quantities to inventory.
 - **Accounts and permissions:** Users sign in with JWT-based authentication. Admins manage inventory and cancellations; staff can view products and create orders.
 - **Stock protection:** The API rejects orders when there is not enough stock, including when requests arrive concurrently.
-
-## Screenshots
 
 ## Screenshots
 
@@ -68,7 +79,7 @@ Canceling an order needs to restore its stock, but doing that twice would inflat
 
 ### Keeping the database schema and tests in sync
 
-I use Alembic for schema changes and a separate PostgreSQL test database for integration tests. The backend currently has **11 passing tests**, covering product operations, order creation and cancellation, concurrent requests, and authentication/permissions. GitHub Actions runs checks on pushes and pull requests.
+I use Alembic for schema changes and a separate PostgreSQL test database for integration tests. The backend currently has **12 passing tests**, covering product operations, order creation and cancellation, concurrent requests, and authentication/permissions. GitHub Actions runs checks on pushes and pull requests.
 
 ## Running locally
 
