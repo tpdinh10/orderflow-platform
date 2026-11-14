@@ -32,6 +32,7 @@ function App() {
   const [activeTab, setActiveTab] = useState<Tab>('dashboard')
   const [products, setProducts] = useState<Product[]>([])
   const [orders, setOrders] = useState<Order[]>([])
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null)
   const [name, setName] = useState('')
   const [price, setPrice] = useState('')
   const [stock, setStock] = useState('')
@@ -188,7 +189,15 @@ function App() {
         <tbody>
           {rows.map(o => (
             <tr key={o.id}>
-              <td className="strong">#{o.id}</td>
+              <td>
+                <button
+                  type="button"
+                  className="order-link"
+                  onClick={() => setSelectedOrder(o)}
+                >
+                  #{o.id}
+                </button>
+              </td>
               <td>{new Date(o.created_at).toLocaleString()}</td>
               <td>{o.items.reduce((sum, i) => sum + i.quantity, 0)}</td>
               <td>${o.items.reduce((sum, i) => sum + i.quantity * Number(i.unit_price), 0).toFixed(2)}</td>
@@ -351,6 +360,79 @@ function App() {
         )}
 
         <footer>OrderFlow · FastAPI + PostgreSQL + React · Demo with synthetic data</footer>
+        {selectedOrder && (
+          <div
+            className="modal-overlay"
+            onClick={() => setSelectedOrder(null)}
+          >
+            <div
+              className="modal-content"
+              role="dialog"
+              aria-modal="true"
+              aria-label={`Order ${selectedOrder.id} details`}
+              onClick={e => e.stopPropagation()}
+            >
+              <div className="modal-header">
+                <h2>Order #{selectedOrder.id}</h2>
+                <button
+                  type="button"
+                  className="secondary"
+                  onClick={() => setSelectedOrder(null)}
+                >
+                  Close
+                </button>
+              </div>
+
+              <p>
+                Status: {selectedOrder.status}
+              </p>
+
+              <p>
+                Created: {new Date(selectedOrder.created_at).toLocaleString()}
+              </p>
+
+              <div className="tablewrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Product</th>
+                      <th>Qty</th>
+                      <th>Unit Price</th>
+                      <th>Subtotal</th>
+                    </tr>
+                  </thead>
+
+                  <tbody>
+                    {selectedOrder.items.map(item => (
+                      <tr key={item.product_id}>
+                        <td>
+                          {products.find(p => p.id === item.product_id)?.name
+                            ?? `Product #${item.product_id}`}
+                        </td>
+                        <td>{item.quantity}</td>
+                        <td>${Number(item.unit_price).toFixed(2)}</td>
+                        <td>
+                          ${(item.quantity * Number(item.unit_price)).toFixed(2)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              <h3>
+                Total: $
+                {selectedOrder.items
+                  .reduce(
+                    (sum, item) =>
+                      sum + item.quantity * Number(item.unit_price),
+                    0
+                  )
+                  .toFixed(2)}
+              </h3>
+            </div>
+          </div>
+        )}
       </main>
     </div>
   )

@@ -385,3 +385,69 @@ footer {
 .inventory-editor p { margin:0 0 12px; color:#64748b; }
 .editor-controls { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
 .editor-controls input { min-width:140px; flex:1; padding:10px; border:1px solid #cbd5e1; border-radius:8px; }
+.order-link {
+  background: none;
+  border: none;
+  padding: 0;
+  color: #3b62e9;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.order-link:hover {
+  text-decoration: underline;
+}
+/* Order Details Modal */
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  z-index: 1000;
+}
+
+.modal-content {
+  width: 100%;
+  max-width: 750px;
+  max-height: 90vh;
+  overflow-y: auto;
+  background: white;
+  border-radius: 14px;
+  padding: 28px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.modal-content p {
+  margin-bottom: 12px;
+}
+
+.modal-content .tablewrap {
+  overflow-x: auto;
+  margin: 20px 0;
+}
+
+.modal-content table {
+  min-width: 500px;
+}
+
+.modal-content th,
+.modal-content td {
+  padding: 12px;
+}
+
+.modal-content h3 {
+  text-align: right;
+  margin-top: 20px;
+}
