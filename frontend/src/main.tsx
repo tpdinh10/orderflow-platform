@@ -26,6 +26,7 @@ const api = async <T,>(path: string, init?: RequestInit): Promise<T> => {
 
 function App() {
   const [account, setAccount] = useState<Account | null>(null)
+  const isDemo = account?.email.toLowerCase() === 'demo@orderflow.local'
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [authBusy, setAuthBusy] = useState(false)
@@ -294,7 +295,7 @@ function App() {
             <div className="tablewrap">
               <table>
                 <thead>
-                  <tr><th>ID</th><th>Product</th><th>Price</th><th>In stock</th><th>Add to order</th>{account.role === 'admin' && <th>Manage</th>}</tr>
+                  <tr><th>ID</th><th>Product</th><th>Price</th><th>In stock</th>{!isDemo && <th>Add to order</th>}{account.role === 'admin' && <th>Manage</th>}</tr>
                 </thead>
                 <tbody>
                   {products.map(p => (
@@ -303,15 +304,17 @@ function App() {
                       <td className="strong">{p.name}</td>
                       <td>${Number(p.price).toFixed(2)}</td>
                       <td><span className={p.stock_quantity > 0 ? 'pill' : 'pill low'}>{p.stock_quantity} available</span></td>
-                      <td>
-                        <input
-                          className="qty"
-                          aria-label={`Quantity for ${p.name}`}
-                          type="number" min="0" max={p.stock_quantity} step="1"
-                          value={cart[p.id] ?? 0}
-                          onChange={e => setCart({ ...cart, [p.id]: Math.min(p.stock_quantity, Math.max(0, Math.floor(Number(e.target.value) || 0))) })}
-                        />
-                      </td>
+                      {!isDemo && (
+                        <td>
+                          <input
+                            className="qty"
+                            aria-label={`Quantity for ${p.name}`}
+                            type="number" min="0" max={p.stock_quantity} step="1"
+                            value={cart[p.id] ?? 0}
+                            onChange={e => setCart({ ...cart, [p.id]: Math.min(p.stock_quantity, Math.max(0, Math.floor(Number(e.target.value) || 0))) })}
+                          />
+                        </td>
+                      )}
                       {account.role === 'admin' && <td>
                         <div className="manage-buttons">
                           <button type="button" className="secondary" disabled={busy} onClick={() => { setStockId(stockId === p.id ? null : p.id); setStockChange(''); setEditingId(null); setMessage('') }}>+ Stock</button>
@@ -322,7 +325,7 @@ function App() {
                     </tr>
                   ))}
                   {products.length === 0 && (
-                    <tr><td colSpan={account.role === 'admin' ? 6 : 5} className="empty">No products yet. Add your first product above.</td></tr>
+                    <tr><td colSpan={account.role === 'admin' ? 6 : isDemo ? 4 : 5} className="empty">No products yet. Add your first product above.</td></tr>
                   )}
                 </tbody>
               </table>
@@ -345,10 +348,14 @@ function App() {
                 <button type="button" className="secondary" onClick={() => setEditingId(null)}>Cancel</button>
               </div>
             </form>}
-            <div className="actions">
-              <span>{selected} items selected</span>
-              <button disabled={busy || selected === 0} onClick={placeOrder}>Create order</button>
-            </div>
+            {!isDemo && (
+              <div className="actions">
+                <span>{selected} items selected</span>
+                <button disabled={busy || selected === 0} onClick={placeOrder}>
+                  Create order
+                </button>
+              </div>
+            )}
           </section>
         )}
 

@@ -15,10 +15,22 @@ def accounts():
     with SessionLocal() as db:
         admin = User(email=f"admin-{suffix}@example.com", hashed_password=hash_password("test-password-123"), role="admin", is_active=True)
         staff = User(email=f"staff-{suffix}@example.com", hashed_password=hash_password("test-password-123"), role="staff", is_active=True)
-        db.add_all([admin, staff])
+        demo = User(
+            email="demo@orderflow.local",
+            hashed_password=hash_password("test-password-123"),
+            role="staff",
+            is_active=True,
+        )
+
+        db.add_all([admin, staff, demo])
         db.commit()
-        ids = [admin.id, staff.id]
-    yield {"admin": admin.email, "staff": staff.email}
+
+        ids = [admin.id, staff.id, demo.id]
+    yield {
+        "admin": admin.email,
+        "staff": staff.email,
+        "demo": demo.email,
+    }
     with SessionLocal() as db:
         db.execute(delete(User).where(User.id.in_(ids)))
         db.commit()
@@ -42,3 +54,36 @@ def test_authentication_and_rbac(accounts):
         admin_headers = {"Authorization": "Bearer " + admin_login.json()["access_token"]}
         assert client.get("/auth/me", headers=admin_headers).json()["role"] == "admin"
         assert client.get("/products", headers=admin_headers).status_code == 200
+
+def test_demo_account_is_read_only(accounts):
+    with TestClient(app) as client:
+        response = login(client, accounts["demo"])
+        assert response.status_code == 200
+
+        token = response.json()["access_token"]
+        headers = {"Authorization": f"Bearer {token}"}
+
+        # Demo can read data
+        assert client.get("/products", headers=headers).status_code == 200
+        assert client.get("/orders", headers=headers).status_code == 200
+
+        # Demo cannot create orders
+        response = client.post(
+            "/orders",
+            json={"items": [{"product_id": 1, "quantity": 1}]},
+            headers=headers,
+        )
+        assert response.status_code == 403
+        assert response.json()["detail"] == "Demo account is read-only"
+
+        # Demo cannot create products
+        response = client.post(
+            "/products",
+            json={
+                "name": "Test Product",
+                "price": 10,
+                "stock_quantity": 5,
+            },
+            headers=headers,
+        )
+        assert response.status_code == 403

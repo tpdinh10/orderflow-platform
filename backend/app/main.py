@@ -4,7 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import select, update
 from sqlalchemy.orm import Session
 from .config import settings
-from .auth import get_current_user, require_admin
+from .auth import get_current_user, require_admin, require_write_access
 from .auth_routes import router as auth_router
 from .models import User
 from .db import get_db
@@ -16,6 +16,7 @@ app.add_middleware(CORSMiddleware, allow_origins=settings.cors_origins.split(","
 DB = Annotated[Session, Depends(get_db)]
 CurrentUser = Annotated[User, Depends(get_current_user)]
 AdminUser = Annotated[User, Depends(require_admin)]
+WriteUser = Annotated[User, Depends(require_write_access)]
 app.include_router(auth_router)
 
 @app.get("/health")
@@ -91,7 +92,7 @@ def get_order(order_id: int, db: DB, user: CurrentUser):
     return order
 
 @app.post("/orders", response_model=OrderOut, status_code=201)
-def create_order(payload: OrderCreate, db: DB, user: CurrentUser):
+def create_order(payload: OrderCreate, db: DB, user: WriteUser):
     # Consolidate duplicate product IDs; deterministic order reduces deadlock risk.
     quantities = {}
     for item in payload.items:
